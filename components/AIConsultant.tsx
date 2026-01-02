@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, Sparkles, X, BrainCircuit, User, Bot, Loader2, Download } from 'lucide-react';
 import { getAIInsight } from '../services/geminiService';
@@ -37,116 +36,36 @@ const AIConsultant: React.FC<AIConsultantProps> = ({ isOpen, onClose, contextDat
 
   const handleSend = async () => {
     if (!input.trim() || isLoading) return;
-    
     const userMsg = input;
     setInput('');
     setMessages(prev => [...prev, { role: 'user', content: userMsg }]);
-    
     setIsLoading(true);
     const contextStr = JSON.stringify(contextData);
     const response = await getAIInsight(`A pergunta do usuário é: "${userMsg}". Use estes dados para responder: ${contextStr}`);
-    
     setMessages(prev => [...prev, { role: 'assistant', content: response || 'Não consegui processar sua dúvida.' }]);
     setIsLoading(false);
-  };
-
-  const handleDownloadChat = () => {
-    if (messages.length === 0) return;
-    
-    const timestamp = new Date().toLocaleString('pt-BR');
-    let chatContent = `HISTÓRICO COMPLETO DE CONSULTORIA - CHEFMETRICS AI\n`;
-    chatContent += `Data de exportação: ${timestamp}\n`;
-    chatContent += `Empresa: ${contextData.company.name}\n`;
-    chatContent += `==========================================\n\n`;
-    
-    messages.forEach((msg) => {
-      const role = msg.role === 'user' ? 'VOCÊ' : 'CHEF AI';
-      chatContent += `${role}:\n${msg.content}\n\n`;
-      chatContent += `------------------------------------------\n\n`;
-    });
-
-    downloadFile(chatContent, `consultoria_completa_${contextData.company.name.toLowerCase().replace(/\s+/g, '_')}.txt`);
-  };
-
-  const handleDownloadSingleMessage = (role: 'user' | 'assistant', content: string) => {
-    const timestamp = new Date().toLocaleString('pt-BR');
-    const roleLabel = role === 'user' ? 'VOCÊ (Pergunta)' : 'CHEF AI (Insight)';
-    const fileNamePrefix = role === 'user' ? 'pergunta' : 'insight';
-    
-    let chatContent = `INSIGHT INDIVIDUAL - CHEFMETRICS AI\n`;
-    chatContent += `Data: ${timestamp}\n`;
-    chatContent += `Empresa: ${contextData.company.name}\n`;
-    chatContent += `==========================================\n\n`;
-    chatContent += `${roleLabel}:\n${content}\n\n`;
-    chatContent += `==========================================\n`;
-
-    downloadFile(chatContent, `${fileNamePrefix}_chef_ai_${new Date().getTime()}.txt`);
-  };
-
-  const downloadFile = (content: string, fileName: string) => {
-    const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-y-0 right-0 w-96 bg-slate-950 border-l border-slate-800 shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-300">
-      <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+    <div className="fixed inset-y-0 right-0 w-96 bg-black border-l border-[#1a1a1a] shadow-2xl z-50 flex flex-col animate-in slide-in-from-right duration-500">
+      <div className="p-6 border-b border-[#1a1a1a] flex justify-between items-center bg-[#0b0b0b]">
         <div className="flex items-center gap-2">
-          <Sparkles className="text-indigo-400" size={20} />
-          <h2 className="font-bold text-slate-200">Chef AI Consultant</h2>
+          <Sparkles className="text-[#D4AF37]" size={20} />
+          <h2 className="font-black text-[#D4AF37] uppercase text-sm tracking-widest">GiroChef AI</h2>
         </div>
-        <div className="flex items-center gap-2">
-          {messages.length > 0 && (
-            <button 
-              onClick={handleDownloadChat}
-              className="p-2 text-slate-500 hover:text-indigo-400 hover:bg-slate-800 rounded-lg transition-all"
-              title="Baixar Conversa Completa"
-            >
-              <Download size={18} />
-            </button>
-          )}
-          <button onClick={onClose} className="p-2 text-slate-500 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-all">
-            <X size={20} />
-          </button>
-        </div>
+        <button onClick={onClose} className="p-2 text-slate-500 hover:text-[#D4AF37] hover:bg-[#1a1a1a] rounded-xl transition-all"><X size={20} /></button>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
         {messages.map((msg, i) => (
           <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[85%] rounded-2xl p-4 text-sm leading-relaxed relative group ${
               msg.role === 'user' 
-                ? 'bg-indigo-600 text-white rounded-tr-none shadow-lg' 
-                : 'bg-slate-900 border border-slate-800 text-slate-300 rounded-tl-none shadow-md'
+                ? 'bg-[#D4AF37] text-black font-semibold rounded-tr-none shadow-lg' 
+                : 'bg-[#1a1a1a] border border-[#1a1a1a] text-slate-300 rounded-tl-none'
             }`}>
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
-                  {msg.role === 'user' ? <User size={14} /> : <Bot size={14} className="text-indigo-400" />}
-                  <span className="text-[10px] font-bold uppercase tracking-widest opacity-60">
-                    {msg.role === 'user' ? 'Você' : 'Chef AI'}
-                  </span>
-                </div>
-                
-                <button 
-                  onClick={() => handleDownloadSingleMessage(msg.role, msg.content)}
-                  className={`p-1 rounded hover:bg-black/20 transition-all opacity-0 group-hover:opacity-100 ${
-                    msg.role === 'user' ? 'text-white/70 hover:text-white' : 'text-slate-500 hover:text-indigo-400'
-                  }`}
-                  title="Baixar esta mensagem"
-                >
-                  <Download size={14} />
-                </button>
-              </div>
-              
               <div className="prose prose-invert prose-sm max-w-none">
                 {msg.content.split('\n').map((line, j) => (
                   <p key={j} className="mb-2 last:mb-0">{line}</p>
@@ -157,33 +76,33 @@ const AIConsultant: React.FC<AIConsultantProps> = ({ isOpen, onClose, contextDat
         ))}
         {isLoading && (
           <div className="flex justify-start">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl rounded-tl-none p-4 flex items-center gap-3">
-              <Loader2 size={16} className="animate-spin text-indigo-400" />
-              <span className="text-xs text-slate-500 italic">Chef está analisando seus números...</span>
+            <div className="bg-[#1a1a1a] border border-[#1a1a1a] rounded-2xl rounded-tl-none p-4 flex items-center gap-3">
+              <Loader2 size={16} className="animate-spin text-[#D4AF37]" />
+              <span className="text-xs text-slate-500 italic uppercase tracking-tighter">Processando Inteligência...</span>
             </div>
           </div>
         )}
       </div>
 
-      <div className="p-4 border-t border-slate-800 bg-slate-900/50">
+      <div className="p-6 border-t border-[#1a1a1a] bg-[#0b0b0b]">
         <div className="relative">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-            placeholder="Pergunte sobre sua rentabilidade..."
-            className="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 px-4 pr-12 text-sm focus:outline-none focus:border-indigo-500 transition-colors"
+            placeholder="Consulte o seu caixa agora..."
+            className="w-full bg-black border border-[#1a1a1a] rounded-2xl py-4 px-5 pr-14 text-sm focus:outline-none focus:border-[#D4AF37] transition-all text-white shadow-inner"
           />
           <button 
             onClick={handleSend}
             disabled={isLoading}
-            className="absolute right-2 top-2 p-2 bg-indigo-600 rounded-lg text-white hover:bg-indigo-700 transition-colors disabled:opacity-50"
+            className="absolute right-3 top-3 p-2 bg-[#D4AF37] rounded-xl text-black hover:scale-105 transition-all disabled:opacity-50 gold-glow"
           >
             <Send size={16} />
           </button>
         </div>
-        <p className="text-[10px] text-slate-500 mt-2 text-center">
+        <p className="text-[9px] text-slate-600 mt-4 text-center font-bold uppercase tracking-[0.2em]">
           Powered by Gemini AI Engine
         </p>
       </div>

@@ -1,113 +1,62 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ChefMetrics AI - Gestão Delivery</title>
+    <title>GIROCHEF - Luxo em Gestão</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Biblioteca PDF carregada como bundle para garantir que html2canvas e jsPDF estejam presentes -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-      body { font-family: 'Inter', sans-serif; }
-      .bg-glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); }
+      :root {
+        --gold: #D4AF37;
+        --graphite: #1a1a1a;
+        --deep-black: #000000;
+      }
+      body { 
+        font-family: 'Inter', sans-serif; 
+        background-color: var(--deep-black);
+      }
       
-      /* Estilos para exportação PDF via Print */
-      @media print {
-        @page {
-          margin: 1cm;
-          size: auto;
-        }
-        
-        aside, header, footer, .no-print, button, .lucide-bell, .lucide-sparkles {
-          display: none !important;
-        }
-        
-        body {
-          background-color: white !important;
-          color: black !important;
-          -webkit-print-color-adjust: exact !important;
-          print-color-adjust: exact !important;
-        }
-        
-        #root {
-          padding: 0 !important;
-          margin: 0 !important;
-        }
-
-        main {
-          margin-left: 0 !important;
-          padding: 0 !important;
-          background: white !important;
-          color: black !important;
-          width: 100% !important;
-        }
-        
-        .bg-slate-950, .bg-slate-900 {
-          background-color: #f8fafc !important; /* Force a light gray background for blocks */
-          color: #0f172a !important;
-          border: 1px solid #e2e8f0 !important;
-          box-shadow: none !important;
-        }
-        
-        .text-slate-100, .text-slate-200, .text-slate-300, .text-white {
-          color: #1e293b !important;
-        }
-
-        .text-slate-400, .text-slate-500 {
-          color: #64748b !important;
-        }
-        
-        .border-slate-800, .border-slate-700 {
-          border-color: #e2e8f0 !important;
-        }
-        
-        table {
-          width: 100% !important;
-          color: black !important;
-          border-collapse: collapse !important;
-        }
-        
-        th, td {
-          border-bottom: 1px solid #e2e8f0 !important;
-          padding: 8px !important;
-        }
-
-        h2, h3, p, span {
-          color: black !important;
-        }
-
-        /* Ensure charts take full width and are visible */
-        .recharts-responsive-container {
-          width: 100% !important;
-          height: 300px !important;
-        }
-
-        .recharts-surface {
-          width: 100% !important;
-        }
+      .text-gold { color: var(--gold); }
+      .bg-gold { background-color: var(--gold); }
+      .border-gold { border-color: var(--gold); }
+      
+      .gold-glow {
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+      }
+      .gold-glow:hover {
+        box-shadow: 0 0 25px rgba(212, 175, 55, 0.5);
       }
 
-      /* Scrollbar polish */
+      /* Custom Scrollbar */
       .custom-scrollbar::-webkit-scrollbar {
-        width: 6px;
+        width: 4px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
-        background: #0f172a;
+        background: var(--deep-black);
       }
       .custom-scrollbar::-webkit-scrollbar-thumb {
-        background: #1e293b;
+        background: var(--gold);
         border-radius: 10px;
       }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-        background: #334155;
+
+      @media print {
+        @page { margin: 1cm; size: auto; }
+        aside, header, footer, .no-print, button { display: none !important; }
+        body { background-color: white !important; color: black !important; }
+        main { margin-left: 0 !important; padding: 0 !important; width: 100% !important; }
+        .bg-slate-900, .bg-slate-950, .bg-[#1a1a1a] { background-color: #f8fafc !important; color: #000 !important; border: 1px solid #ddd !important; }
+        .text-gold, .text-[#D4AF37] { color: #856404 !important; }
+        h2, h3, p, span, td, th { color: black !important; }
       }
 
-      @keyframes progress {
+      @keyframes gold-progress {
         0% { transform: translateX(-100%); }
-        50% { transform: translateX(0); }
         100% { transform: translateX(100%); }
+      }
+      .animate-gold-progress {
+        animation: gold-progress 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
       }
     </style>
   <script type="importmap">
@@ -123,7 +72,7 @@
 }
 </script>
 </head>
-  <body class="bg-slate-950 text-slate-50 min-h-screen">
+  <body class="text-slate-50 min-h-screen">
     <div id="root"></div>
   </body>
 </html>

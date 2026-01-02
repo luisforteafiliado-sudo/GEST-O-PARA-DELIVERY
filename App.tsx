@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -16,39 +15,89 @@ import MenuItemForm from './components/MenuItemForm';
 import ConfirmationModal from './components/ConfirmationModal';
 import NotificationsPopover from './components/NotificationsPopover';
 import Settings from './components/Settings';
+import SupportModal from './components/Support';
+import AddCompanyModal from './components/AddCompanyModal';
 import { COMPANIES, MOCK_MENU_ITEMS, MOCK_TRANSACTIONS, MOCK_PRODUCTS, MOCK_PRODUCT_OUTPUTS } from './constants';
 import { Sparkles, Bell } from 'lucide-react';
 import { Transaction, MenuItem, Product, ProductOutput, Notification, Company } from './types';
 
+// Utility to load data from localStorage
+const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
+  try {
+    const saved = localStorage.getItem(`girochef_${key}`);
+    return saved ? JSON.parse(saved) : defaultValue;
+  } catch (e) {
+    console.error(`Error loading ${key} from storage:`, e);
+    return defaultValue;
+  }
+};
+
+// Utility to save data to localStorage
+const saveToStorage = (key: string, value: any) => {
+  try {
+    localStorage.setItem(`girochef_${key}`, JSON.stringify(value));
+  } catch (e) {
+    console.error(`Error saving ${key} to storage:`, e);
+  }
+};
+
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [availableCompanies, setAvailableCompanies] = useState<Company[]>(COMPANIES);
-  const [selectedCompany, setSelectedCompany] = useState<Company>(availableCompanies[0]);
+  
+  // Persistent States
+  const [availableCompanies, setAvailableCompanies] = useState<Company[]>(() => 
+    loadFromStorage('availableCompanies', COMPANIES)
+  );
+  
+  const [selectedCompany, setSelectedCompany] = useState<Company>(() => {
+    const saved = loadFromStorage<Company | null>('selectedCompany', null);
+    return (saved && availableCompanies.some(c => c.id === saved.id)) 
+      ? saved 
+      : availableCompanies[0];
+  });
+
+  const [transactions, setTransactions] = useState<Record<string, Transaction[]>>(() => 
+    loadFromStorage('transactions', MOCK_TRANSACTIONS)
+  );
+
+  const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>(() => 
+    loadFromStorage('menuItems', MOCK_MENU_ITEMS)
+  );
+
+  const [products, setProducts] = useState<Record<string, Product[]>>(() => 
+    loadFromStorage('products', MOCK_PRODUCTS)
+  );
+
+  const [productOutputs, setProductOutputs] = useState<Record<string, ProductOutput[]>>(() => 
+    loadFromStorage('productOutputs', MOCK_PRODUCT_OUTPUTS)
+  );
+
+  // Persistence Sync Effects
+  useEffect(() => saveToStorage('availableCompanies', availableCompanies), [availableCompanies]);
+  useEffect(() => saveToStorage('selectedCompany', selectedCompany), [selectedCompany]);
+  useEffect(() => saveToStorage('transactions', transactions), [transactions]);
+  useEffect(() => saveToStorage('menuItems', menuItems), [menuItems]);
+  useEffect(() => saveToStorage('products', products), [products]);
+  useEffect(() => saveToStorage('productOutputs', productOutputs), [productOutputs]);
+
+  // UI States
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [isSupportOpen, setIsSupportOpen] = useState(false);
+  const [isAddingCompanyModalOpen, setIsAddingCompanyModalOpen] = useState(false);
   const notificationsRef = useRef<HTMLDivElement>(null);
   
-  // States
-  const [transactions, setTransactions] = useState<Record<string, Transaction[]>>(MOCK_TRANSACTIONS);
   const [isAddingTransaction, setIsAddingTransaction] = useState(false);
   const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
-
-  const [menuItems, setMenuItems] = useState<Record<string, MenuItem[]>>(MOCK_MENU_ITEMS);
   const [isAddingMenuItem, setIsAddingMenuItem] = useState(false);
   const [editingMenuItem, setEditingMenuItem] = useState<MenuItem | null>(null);
-
-  const [products, setProducts] = useState<Record<string, Product[]>>(MOCK_PRODUCTS);
   const [isAddingProduct, setIsAddingProduct] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
-
-  const [productOutputs, setProductOutputs] = useState<Record<string, ProductOutput[]>>(MOCK_PRODUCT_OUTPUTS);
   const [isAddingOutput, setIsAddingOutput] = useState(false);
   const [editingOutput, setEditingOutput] = useState<ProductOutput | null>(null);
 
-  // Notifications State
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Effect to close notifications on click outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
@@ -64,11 +113,8 @@ const App: React.FC = () => {
   const currentProducts = products[selectedCompany.id] || [];
   const currentOutputs = productOutputs[selectedCompany.id] || [];
 
-  // Generate dynamic notifications based on operation data
   useEffect(() => {
     const newNotifications: Notification[] = [];
-    
-    // 1. Low Stock Check
     currentProducts.forEach(p => {
       if (p.quantity <= 10) {
         newNotifications.push({
@@ -82,7 +128,6 @@ const App: React.FC = () => {
       }
     });
 
-    // 2. High Waste Check
     const recentWaste = currentOutputs.filter(o => o.reason === 'Desperdício').reduce((acc, o) => acc + o.estimatedCost, 0);
     if (recentWaste > 100) {
       newNotifications.push({
@@ -95,11 +140,10 @@ const App: React.FC = () => {
       });
     }
 
-    // 3. Welcome / Info
     newNotifications.push({
       id: 'welcome-msg',
       type: 'info',
-      title: 'ChefMetrics Ativo',
+      title: 'GIROCHEF Ativo',
       message: `Monitorando ${selectedCompany.name} em tempo real. Novos insights de CMV disponíveis.`,
       timestamp: new Date().toISOString(),
       read: true
@@ -108,7 +152,6 @@ const App: React.FC = () => {
     setNotifications(newNotifications);
   }, [selectedCompany.id, products, productOutputs]);
 
-  // Confirmation Modal
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
     type: 'transaction' | 'menuItem' | 'product' | 'output' | 'company';
@@ -135,7 +178,6 @@ const App: React.FC = () => {
     outputs: currentOutputs
   };
 
-  // Handlers
   const handleSaveTransaction = (txData: Omit<Transaction, 'id'>) => {
     const newTx: Transaction = { ...txData, id: Math.random().toString(36).substr(2, 9) };
     if (editingTransaction) {
@@ -211,7 +253,6 @@ const App: React.FC = () => {
       setEditingOutput(null);
     } else {
       const newOutput: ProductOutput = { ...outputData, id: Math.random().toString(36).substr(2, 9) };
-      
       setProductOutputs(prev => ({
         ...prev,
         [selectedCompany.id]: [newOutput, ...(prev[selectedCompany.id] || [])]
@@ -223,7 +264,6 @@ const App: React.FC = () => {
           p.id === outputData.productId ? { ...p, quantity: Math.max(0, p.quantity - outputData.quantity) } : p
         )
       }));
-
       setIsAddingOutput(false);
     }
   };
@@ -231,6 +271,17 @@ const App: React.FC = () => {
   const handleUpdateCompany = (updatedData: Partial<Company>) => {
     setAvailableCompanies(prev => prev.map(c => c.id === selectedCompany.id ? { ...c, ...updatedData } : c));
     setSelectedCompany(prev => ({ ...prev, ...updatedData }));
+  };
+
+  const handleAddNewCompany = (companyData: Omit<Company, 'id'>) => {
+    const newId = Math.random().toString(36).substr(2, 9);
+    const newCompany: Company = {
+      ...companyData,
+      id: newId
+    };
+    setAvailableCompanies(prev => [...prev, newCompany]);
+    setSelectedCompany(newCompany);
+    setActiveTab('dashboard');
   };
 
   const initiateDelete = (type: any, id: string, title: string, message: string) => {
@@ -306,34 +357,37 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-50 flex">
+    <div className="min-h-screen bg-black text-white flex">
       <Sidebar activeTab={activeTab} setActiveTab={(t) => { 
         setActiveTab(t); 
         setIsAddingTransaction(false); setEditingTransaction(null); 
         setIsAddingProduct(false); setEditingProduct(null); 
         setIsAddingOutput(false); setEditingOutput(null);
         setIsAddingMenuItem(false); setEditingMenuItem(null);
-      }} />
+      }} onSupportClick={() => setIsSupportOpen(true)} />
       <main className="flex-1 ml-64 min-h-screen flex flex-col transition-all duration-300">
-        <header className="sticky top-0 h-20 border-b border-slate-800 bg-slate-950/80 backdrop-blur-md z-30 px-8 flex items-center justify-between no-print">
+        <header className="sticky top-0 h-20 border-b border-[#1a1a1a] bg-black/80 backdrop-blur-md z-30 px-8 flex items-center justify-between no-print">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-bold capitalize">{activeTab.replace(/([A-Z])/g, ' $1')}</h2>
-            <div className="h-6 w-px bg-slate-800 mx-2 hidden sm:block"></div>
+            <h2 className="text-xl font-bold capitalize text-[#D4AF37]">{activeTab.replace(/([A-Z])/g, ' $1')}</h2>
+            <div className="h-6 w-px bg-[#1a1a1a] mx-2 hidden sm:block"></div>
             <p className="text-slate-500 text-sm hidden sm:block">{new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
           <div className="flex items-center gap-4">
-            <button onClick={() => setIsAIModalOpen(true)} className="bg-indigo-600/10 border border-indigo-600/20 text-indigo-400 px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-indigo-600 hover:text-white transition-all shadow-lg group">
-              <Sparkles size={16} className="group-hover:animate-pulse" /> Chef AI Insight
+            <button 
+              onClick={() => setIsAIModalOpen(true)} 
+              className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-[#D4AF37] hover:text-black transition-all gold-glow group"
+            >
+              <Sparkles size={16} className="group-hover:animate-pulse" /> GIROCHEF AI
             </button>
             
             <div className="relative" ref={notificationsRef}>
               <button 
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className={`p-2.5 bg-slate-900 border border-slate-800 rounded-xl text-white relative hover:border-slate-600 transition-colors ${unreadCount > 0 ? 'ring-2 ring-indigo-500/20' : ''}`}
+                className={`p-2.5 bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl text-white relative hover:border-[#D4AF37]/50 transition-colors ${unreadCount > 0 ? 'ring-2 ring-[#D4AF37]/20' : ''}`}
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 w-4 h-4 bg-rose-500 rounded-full border-2 border-slate-900 text-[8px] flex items-center justify-center font-black animate-pulse">
+                  <span className="absolute top-2 right-2 w-4 h-4 bg-[#D4AF37] rounded-full border-2 border-black text-[8px] flex items-center justify-center font-black text-black">
                     {unreadCount}
                   </span>
                 )}
@@ -348,13 +402,24 @@ const App: React.FC = () => {
               )}
             </div>
 
-            <CompanySelector companies={availableCompanies} selected={selectedCompany} onSelect={setSelectedCompany} />
+            <CompanySelector 
+              companies={availableCompanies} 
+              selected={selectedCompany} 
+              onSelect={setSelectedCompany} 
+              onAddClick={() => setIsAddingCompanyModalOpen(true)}
+            />
           </div>
         </header>
         <div className="p-8 max-w-7xl mx-auto w-full flex-1">{renderContent()}</div>
-        <footer className="p-8 border-t border-slate-900 text-slate-600 text-xs text-center no-print">© 2024 ChefMetrics SaaS - Inteligência Financeira para Delivery.</footer>
+        <footer className="p-8 border-t border-[#1a1a1a] text-slate-600 text-xs text-center no-print">© 2024 GIROCHEF SaaS - Inteligência Financeira para Delivery.</footer>
       </main>
       <AIConsultant isOpen={isAIModalOpen} onClose={() => setIsAIModalOpen(false)} contextData={contextData} />
+      <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
+      <AddCompanyModal 
+        isOpen={isAddingCompanyModalOpen} 
+        onClose={() => setIsAddingCompanyModalOpen(false)} 
+        onSave={handleAddNewCompany} 
+      />
       <ConfirmationModal isOpen={confirmModal.isOpen} title={confirmModal.title} message={confirmModal.message} confirmLabel="Excluir" onConfirm={handleConfirmDelete} onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} />
     </div>
   );

@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Cell, PieChart, Pie, ComposedChart, Line, Legend } from 'recharts';
 import { Transaction, MenuItem, Company } from '../types';
@@ -140,7 +139,7 @@ const Reports: React.FC<ReportsProps> = ({ company, transactions, menuItems }) =
 
     const opt = {
       margin: 0.5,
-      filename: `ChefMetrics_${blockName.replace(/\s+/g, '_')}_${company.name.replace(/\s+/g, '_')}.pdf`,
+      filename: `GIROCHEF_${blockName.replace(/\s+/g, '_')}_${company.name.replace(/\s+/g, '_')}.pdf`,
       image: { type: 'jpeg', quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true, backgroundColor: '#020617' },
       jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
@@ -171,7 +170,7 @@ const Reports: React.FC<ReportsProps> = ({ company, transactions, menuItems }) =
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 relative">
-      {/* Overlay Chef AI */}
+      {/* Overlay GIROCHEF AI */}
       {isGenerating && (
         <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-xl z-[100] flex items-center justify-center p-6 no-print">
           <div className="max-w-md w-full bg-slate-900 border border-slate-800 rounded-[2.5rem] p-10 shadow-2xl text-center space-y-8 animate-in zoom-in-95 duration-500">
@@ -191,10 +190,10 @@ const Reports: React.FC<ReportsProps> = ({ company, transactions, menuItems }) =
             <div className="pt-4 flex items-start gap-3 text-left bg-indigo-500/5 p-4 rounded-2xl border border-indigo-500/10">
               <AlertCircle size={18} className="text-indigo-400 shrink-0 mt-0.5" />
               <p className="text-[11px] text-slate-400 leading-relaxed italic">
-                O ChefMetrics está gerando um extrato modular otimizado para sua gestão em <strong>{selectedRangeLabel}</strong>.
+                O GIROCHEF está gerando um extrato modular otimizado para sua gestão em <strong>{selectedRangeLabel}</strong>.
               </p>
             </div>
-            <p className="text-[10px] text-slate-600 uppercase font-bold tracking-[0.2em]">ChefMetrics modular reporting</p>
+            <p className="text-[10px] text-slate-600 uppercase font-bold tracking-[0.2em]">GIROCHEF modular reporting</p>
           </div>
         </div>
       )}
@@ -391,7 +390,7 @@ const Reports: React.FC<ReportsProps> = ({ company, transactions, menuItems }) =
             <div className="mt-6 p-4 bg-slate-950/40 rounded-xl border border-slate-800 flex items-center gap-4">
               <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400 shrink-0"><Sparkles size={20} /></div>
               <div>
-                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest leading-tight">Sugestão Estratégica Chefmetrics:</p>
+                <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest leading-tight">Sugestão Estratégica GIROCHEF:</p>
                 <p className="text-xs font-medium text-slate-300">Foque na tração dos itens de maior lucro líquido. Pequenos ajustes no volume impactam severamente a margem total.</p>
               </div>
             </div>

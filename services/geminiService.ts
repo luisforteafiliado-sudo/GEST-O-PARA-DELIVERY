@@ -1,4 +1,3 @@
-
 // Always use import {GoogleGenAI} from "@google/genai";
 import {GoogleGenAI} from "@google/genai";
 
@@ -8,7 +7,7 @@ export const getAIInsight = async (context: string) => {
     const ai = new GoogleGenAI({apiKey: process.env.API_KEY});
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Aja como uma PM Sênior e Consultora de Negócios para Delivery. 
+      contents: `Aja como uma PM Sênior e Consultora de Negócios da plataforma GIROCHEF. 
       Analise o seguinte contexto financeiro de uma operação de restaurante e dê insights estratégicos curtos, práticos e acionáveis sobre rentabilidade, engenharia de cardápio e fluxo de caixa.
       
       Contexto: ${context}

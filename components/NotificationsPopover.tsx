@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Bell, Check, Info, AlertTriangle, X, Zap } from 'lucide-react';
 import { Notification } from '../types';
@@ -51,7 +50,7 @@ const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
                   <div className={`shrink-0 w-9 h-9 rounded-xl flex items-center justify-center ${
                     n.type === 'warning' ? 'bg-amber-500/10 text-amber-500' :
                     n.type === 'error' ? 'bg-rose-500/10 text-rose-500' :
-                    n.type === 'success' ? 'bg-emerald-500/10 text-emerald-500' :
+                    n.type === 'success' ? 'bg-emerald-500/10 text-emerald-400' :
                     'bg-indigo-500/10 text-indigo-500'
                   }`}>
                     {n.type === 'warning' ? <AlertTriangle size={18} /> : 
@@ -94,7 +93,7 @@ const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({
 
       {notifications.length > 0 && (
         <div className="p-3 bg-slate-950/30 border-t border-slate-800 text-center">
-          <p className="text-[9px] text-slate-600 uppercase font-black tracking-widest">ChefMetrics IA Monitorando sua operação 24/7</p>
+          <p className="text-[9px] text-slate-600 uppercase font-black tracking-widest">GIROCHEF AI Monitorando sua operação 24/7</p>
         </div>
       )}
     </div>
