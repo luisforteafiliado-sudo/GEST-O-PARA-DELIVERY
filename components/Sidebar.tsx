@@ -1,5 +1,6 @@
+
 import React from 'react';
-import { LayoutDashboard, ReceiptText, UtensilsCrossed, BarChart3, Settings, HelpCircle, PackageSearch, PackageMinus } from 'lucide-react';
+import { LayoutDashboard, ReceiptText, UtensilsCrossed, BarChart3, Settings, HelpCircle, PackageSearch, PackageMinus, ShoppingBag, Truck } from 'lucide-react';
 
 interface SidebarProps {
   activeTab: string;
@@ -13,6 +14,8 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onSupportCli
     { id: 'cashflow', label: 'Fluxo de Caixa', icon: ReceiptText },
     { id: 'products', label: 'Entrada de Produtos', icon: PackageSearch },
     { id: 'outputs', label: 'Saída de Produtos', icon: PackageMinus },
+    { id: 'shopping-list', label: 'Lista de Compras', icon: ShoppingBag },
+    { id: 'suppliers', label: 'Cadastro de Fornecedores', icon: Truck },
     { id: 'menu', label: 'Engenharia de Cardápio', icon: UtensilsCrossed },
     { id: 'reports', label: 'Relatórios', icon: BarChart3 },
   ];
@@ -33,7 +36,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onSupportCli
         </p>
       </div>
 
-      <nav className="flex-1 space-y-2">
+      <nav className="flex-1 space-y-1 custom-scrollbar overflow-y-auto pr-2">
         {menuItems.map((item) => (
           <button
             key={item.id}
@@ -45,7 +48,7 @@ const Sidebar: React.FC<SidebarProps> = ({ activeTab, setActiveTab, onSupportCli
             }`}
           >
             <item.icon size={20} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-            <span className={`font-semibold text-sm ${activeTab === item.id ? 'tracking-wide' : ''}`}>{item.label}</span>
+            <span className={`font-semibold text-xs ${activeTab === item.id ? 'tracking-wide' : ''}`}>{item.label}</span>
           </button>
         ))}
       </nav>

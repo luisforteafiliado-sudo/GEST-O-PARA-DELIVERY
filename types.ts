@@ -1,3 +1,4 @@
+
 export type Platform = 'iFood' | 'brendi';
 export type Unit = 'un' | 'kg' | 'g' | 'l' | 'ml';
 export type OutputReason = 'Venda' | 'Desperdício' | 'Uso Interno' | 'Vencimento' | 'Outros';
@@ -60,6 +61,32 @@ export interface ProductOutput {
   reason: OutputReason;
   date: string;
   estimatedCost: number;
+}
+
+export interface Supplier {
+  id: string;
+  name: string;
+  contact: string;
+  category: string;
+  email?: string;
+  rating?: number;
+}
+
+export interface ManualShoppingItem {
+  id: string;
+  name: string;
+  quantity: number;
+  unit: Unit;
+  estimatedCost: number;
+  supplier: string;
+}
+
+export interface ManualShoppingList {
+  id: string;
+  name: string;
+  date: string;
+  totalCost: number;
+  items: ManualShoppingItem[];
 }
 
 export interface FinancialStats {

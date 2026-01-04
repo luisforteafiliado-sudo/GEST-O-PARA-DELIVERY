@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Dashboard from './components/Dashboard';
@@ -17,9 +18,13 @@ import NotificationsPopover from './components/NotificationsPopover';
 import Settings from './components/Settings';
 import SupportModal from './components/Support';
 import AddCompanyModal from './components/AddCompanyModal';
-import { COMPANIES, MOCK_MENU_ITEMS, MOCK_TRANSACTIONS, MOCK_PRODUCTS, MOCK_PRODUCT_OUTPUTS } from './constants';
+import ShoppingList from './components/ShoppingList';
+import ManualShoppingListForm from './components/ManualShoppingListForm';
+import Suppliers from './components/Suppliers';
+import SupplierForm from './components/SupplierForm';
+import { COMPANIES, MOCK_MENU_ITEMS, MOCK_TRANSACTIONS, MOCK_PRODUCTS, MOCK_PRODUCT_OUTPUTS, MOCK_SUPPLIERS } from './constants';
 import { Sparkles, Bell } from 'lucide-react';
-import { Transaction, MenuItem, Product, ProductOutput, Notification, Company } from './types';
+import { Transaction, MenuItem, Product, ProductOutput, Notification, Company, Supplier, ManualShoppingList, ManualShoppingItem } from './types';
 
 // Utility to load data from localStorage
 const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
@@ -72,6 +77,14 @@ const App: React.FC = () => {
     loadFromStorage('productOutputs', MOCK_PRODUCT_OUTPUTS)
   );
 
+  const [suppliers, setSuppliers] = useState<Record<string, Supplier[]>>(() => 
+    loadFromStorage('suppliers', MOCK_SUPPLIERS)
+  );
+
+  const [manualShoppingLists, setManualShoppingLists] = useState<Record<string, ManualShoppingList[]>>(() => 
+    loadFromStorage('manualShoppingLists', {})
+  );
+
   // Persistence Sync Effects
   useEffect(() => saveToStorage('availableCompanies', availableCompanies), [availableCompanies]);
   useEffect(() => saveToStorage('selectedCompany', selectedCompany), [selectedCompany]);
@@ -79,6 +92,8 @@ const App: React.FC = () => {
   useEffect(() => saveToStorage('menuItems', menuItems), [menuItems]);
   useEffect(() => saveToStorage('products', products), [products]);
   useEffect(() => saveToStorage('productOutputs', productOutputs), [productOutputs]);
+  useEffect(() => saveToStorage('suppliers', suppliers), [suppliers]);
+  useEffect(() => saveToStorage('manualShoppingLists', manualShoppingLists), [manualShoppingLists]);
 
   // UI States
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
@@ -95,6 +110,10 @@ const App: React.FC = () => {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isAddingOutput, setIsAddingOutput] = useState(false);
   const [editingOutput, setEditingOutput] = useState<ProductOutput | null>(null);
+  const [isAddingSupplier, setIsAddingSupplier] = useState(false);
+  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
+  const [isAddingManualShoppingList, setIsAddingManualShoppingList] = useState(false);
+  const [editingManualList, setEditingManualList] = useState<ManualShoppingList | null>(null);
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
@@ -112,6 +131,8 @@ const App: React.FC = () => {
   const currentMenuItems = menuItems[selectedCompany.id] || [];
   const currentProducts = products[selectedCompany.id] || [];
   const currentOutputs = productOutputs[selectedCompany.id] || [];
+  const currentSuppliers = suppliers[selectedCompany.id] || [];
+  const currentManualLists = manualShoppingLists[selectedCompany.id] || [];
 
   useEffect(() => {
     const newNotifications: Notification[] = [];
@@ -154,7 +175,7 @@ const App: React.FC = () => {
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
-    type: 'transaction' | 'menuItem' | 'product' | 'output' | 'company';
+    type: 'transaction' | 'menuItem' | 'product' | 'output' | 'company' | 'supplier' | 'manualList';
     id: string;
     title: string;
     message: string;
@@ -268,6 +289,72 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSaveSupplier = (supplierData: Omit<Supplier, 'id'>) => {
+    if (editingSupplier) {
+      setSuppliers(prev => ({
+        ...prev,
+        [selectedCompany.id]: (prev[selectedCompany.id] || []).map(s => 
+          s.id === editingSupplier.id ? { ...supplierData, id: s.id } : s
+        )
+      }));
+      setEditingSupplier(null);
+    } else {
+      const newSupplier: Supplier = { ...supplierData, id: Math.random().toString(36).substr(2, 9) };
+      setSuppliers(prev => ({
+        ...prev,
+        [selectedCompany.id]: [...(prev[selectedCompany.id] || []), newSupplier]
+      }));
+      setIsAddingSupplier(false);
+    }
+  };
+
+  const handleSaveManualShoppingList = (items: ManualShoppingItem[], name: string) => {
+    const totalCost = items.reduce((acc, item) => acc + (item.quantity * item.estimatedCost), 0);
+    
+    if (editingManualList) {
+      setManualShoppingLists(prev => ({
+        ...prev,
+        [selectedCompany.id]: (prev[selectedCompany.id] || []).map(l => 
+          l.id === editingManualList.id ? { ...l, name, items, totalCost } : l
+        )
+      }));
+      setEditingManualList(null);
+    } else {
+      const newList: ManualShoppingList = {
+        id: Math.random().toString(36).substr(2, 9),
+        name: name || `Lista de Compras - ${new Date().toLocaleDateString('pt-BR')}`,
+        date: new Date().toISOString(),
+        totalCost,
+        items: items
+      };
+
+      setManualShoppingLists(prev => ({
+        ...prev,
+        [selectedCompany.id]: [newList, ...(prev[selectedCompany.id] || [])]
+      }));
+      setIsAddingManualShoppingList(false);
+    }
+  };
+
+  const handleLaunchItemFromShoppingList = (item: ManualShoppingItem) => {
+    // Switch to product entry tab and pre-fill data
+    setIsAddingManualShoppingList(false);
+    setEditingManualList(null);
+    setActiveTab('products');
+    setEditingProduct({
+      id: 'template', // Temporary ID to trigger the form
+      name: item.name,
+      supplier: item.supplier,
+      cost: item.estimatedCost,
+      quantity: item.quantity,
+      unit: item.unit,
+      date: new Date().toISOString().split('T')[0],
+      nfNumber: '',
+      category: 'Compras Manuais'
+    });
+    setIsAddingProduct(true);
+  };
+
   const handleUpdateCompany = (updatedData: Partial<Company>) => {
     setAvailableCompanies(prev => prev.map(c => c.id === selectedCompany.id ? { ...c, ...updatedData } : c));
     setSelectedCompany(prev => ({ ...prev, ...updatedData }));
@@ -316,6 +403,10 @@ const App: React.FC = () => {
       } else {
         alert("Você deve manter pelo menos uma empresa cadastrada.");
       }
+    } else if (type === 'supplier') {
+       setSuppliers(prev => ({ ...prev, [selectedCompany.id]: prev[selectedCompany.id].filter(s => s.id !== id) }));
+    } else if (type === 'manualList') {
+       setManualShoppingLists(prev => ({ ...prev, [selectedCompany.id]: prev[selectedCompany.id].filter(l => l.id !== id) }));
     }
     setConfirmModal(prev => ({ ...prev, isOpen: false }));
   };
@@ -343,12 +434,37 @@ const App: React.FC = () => {
     if (activeTab === 'outputs' && (isAddingOutput || editingOutput)) {
       return <ProductOutputForm availableProducts={currentProducts} initialData={editingOutput || undefined} onSave={handleSaveOutput} onCancel={() => { setIsAddingOutput(false); setEditingOutput(null); }} />;
     }
+    if (activeTab === 'suppliers' && (isAddingSupplier || editingSupplier)) {
+      return <SupplierForm initialData={editingSupplier || undefined} onSave={handleSaveSupplier} onCancel={() => { setIsAddingSupplier(false); setEditingSupplier(null); }} />;
+    }
+    if (activeTab === 'shopping-list' && (isAddingManualShoppingList || editingManualList)) {
+      return (
+        <ManualShoppingListForm 
+          availableProducts={currentProducts} 
+          onSave={handleSaveManualShoppingList} 
+          onCancel={() => { setIsAddingManualShoppingList(false); setEditingManualList(null); }} 
+          onLaunchItem={handleLaunchItemFromShoppingList} 
+          initialItems={editingManualList?.items}
+          initialName={editingManualList?.name}
+        />
+      );
+    }
 
     switch (activeTab) {
       case 'dashboard': return <Dashboard company={selectedCompany} transactions={currentTransactions} menuItems={currentMenuItems} productOutputs={currentOutputs} />;
       case 'cashflow': return <CashFlow transactions={currentTransactions} onAddClick={() => setIsAddingTransaction(true)} onEditClick={setEditingTransaction} onDeleteClick={(id) => initiateDelete('transaction', id, 'Excluir Lançamento?', 'Esta ação é irreversível.')} onExport={() => {}} />;
       case 'products': return <ProductRegistration products={currentProducts} onAddClick={() => setIsAddingProduct(true)} onEditClick={setEditingProduct} onDeleteClick={(id) => initiateDelete('product', id, 'Excluir Produto?', 'Isso removerá o insumo do seu cadastro.')} />;
       case 'outputs': return <ProductOutputRegistration outputs={currentOutputs} onAddClick={() => setIsAddingOutput(true)} onEditClick={setEditingOutput} onDeleteClick={(id) => initiateDelete('output', id, 'Excluir Baixa?', 'Ao excluir, a quantidade será devolvida ao estoque.')} />;
+      case 'shopping-list': return (
+        <ShoppingList 
+          products={currentProducts} 
+          manualLists={currentManualLists} 
+          onAddManualClick={() => setIsAddingManualShoppingList(true)} 
+          onEditManualList={setEditingManualList}
+          onDeleteManualList={(id) => initiateDelete('manualList', id, 'Dar Baixa na Lista?', 'Isso removerá a lista do seu histórico.')}
+        />
+      );
+      case 'suppliers': return <Suppliers suppliers={currentSuppliers} onAddClick={() => setIsAddingSupplier(true)} onEditClick={(s) => setEditingSupplier(s)} onDeleteClick={(id) => initiateDelete('supplier', id, 'Excluir Fornecedor?', 'Isso removerá o fornecedor da base.')} />;
       case 'menu': return <MenuEngineering items={currentMenuItems} onAddClick={() => setIsAddingMenuItem(true)} onEditClick={(item) => setEditingMenuItem(item)} onDeleteClick={(id) => initiateDelete('menuItem', id, 'Excluir Item do Cardápio?', 'Isso removerá a ficha técnica permanentemente.')} />;
       case 'reports': return <Reports company={selectedCompany} transactions={currentTransactions} menuItems={currentMenuItems} />;
       case 'settings': return <Settings company={selectedCompany} onUpdateCompany={handleUpdateCompany} onDeleteCompany={(id) => initiateDelete('company', id, 'Excluir Empresa?', 'Isso apagará permanentemente todos os dados desta empresa. Tem certeza?')} />;
@@ -364,11 +480,13 @@ const App: React.FC = () => {
         setIsAddingProduct(false); setEditingProduct(null); 
         setIsAddingOutput(false); setEditingOutput(null);
         setIsAddingMenuItem(false); setEditingMenuItem(null);
+        setIsAddingSupplier(false); setEditingSupplier(null);
+        setIsAddingManualShoppingList(false); setEditingManualList(null);
       }} onSupportClick={() => setIsSupportOpen(true)} />
       <main className="flex-1 ml-64 min-h-screen flex flex-col transition-all duration-300">
         <header className="sticky top-0 h-20 border-b border-[#1a1a1a] bg-black/80 backdrop-blur-md z-30 px-8 flex items-center justify-between no-print">
           <div className="flex items-center gap-4">
-            <h2 className="text-xl font-bold capitalize text-[#D4AF37]">{activeTab.replace(/([A-Z])/g, ' $1')}</h2>
+            <h2 className="text-xl font-bold capitalize text-[#D4AF37]">{activeTab.replace(/-/g, ' ')}</h2>
             <div className="h-6 w-px bg-[#1a1a1a] mx-2 hidden sm:block"></div>
             <p className="text-slate-500 text-sm hidden sm:block">{new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
           </div>
@@ -420,7 +538,7 @@ const App: React.FC = () => {
         onClose={() => setIsAddingCompanyModalOpen(false)} 
         onSave={handleAddNewCompany} 
       />
-      <ConfirmationModal isOpen={confirmModal.isOpen} title={confirmModal.title} message={confirmModal.message} confirmLabel="Excluir" onConfirm={handleConfirmDelete} onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} />
+      <ConfirmationModal isOpen={confirmModal.isOpen} title={confirmModal.title} message={confirmModal.message} confirmLabel="Confirmar" onConfirm={handleConfirmDelete} onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} />
     </div>
   );
 };

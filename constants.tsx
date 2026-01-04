@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Company, MenuItem, Transaction, Product, ProductOutput } from './types';
+import { Company, MenuItem, Transaction, Product, ProductOutput, Supplier } from './types';
 
 export const COMPANIES: Company[] = [
   { id: '1', name: 'Burger Lab', category: 'Hamburgueria', logo: 'https://picsum.photos/seed/burger/200' },
@@ -36,6 +36,14 @@ export const MOCK_PRODUCT_OUTPUTS: Record<string, ProductOutput[]> = {
   '1': [
     { id: 'o1', productId: 'p1', productName: 'Carne Bovina Moída', quantity: 2.5, unit: 'kg', reason: 'Desperdício', date: '2025-12-30', estimatedCost: 114.75 },
     { id: 'o2', productId: 'p2', productName: 'Pão de Brioche', quantity: 12, unit: 'un', reason: 'Venda', date: '2025-12-31', estimatedCost: 22.20 },
+  ],
+  '2': []
+};
+
+export const MOCK_SUPPLIERS: Record<string, Supplier[]> = {
+  '1': [
+    { id: 's1', name: 'Friboi Alimentos', contact: '(11) 98888-7777', category: 'Proteínas', rating: 5 },
+    { id: 's2', name: 'Padaria Artesanal', contact: '(11) 97777-6666', category: 'Panificação', rating: 4 },
   ],
   '2': []
 };
