@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>GIROCHEF - Gestão Premium</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%23D4AF37'/><text x='50%25' y='50%25' dominant-baseline='central' text-anchor='middle' font-family='Inter, sans-serif' font-weight='800' font-size='60' fill='black'>G</text></svg>">
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,12 +15,16 @@
         --graphite: #1a1a1a;
         --deep-black: #000000;
       }
+      * {
+        -webkit-tap-highlight-color: transparent;
+      }
       body { 
         font-family: 'Inter', sans-serif; 
         background-color: var(--deep-black);
         color: white;
         margin: 0;
         overflow-x: hidden;
+        overscroll-behavior-y: contain;
       }
       
       .text-gold { color: var(--gold) !important; }
@@ -35,6 +40,7 @@
 
       .custom-scrollbar::-webkit-scrollbar {
         width: 4px;
+        height: 4px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
         background: var(--deep-black);
@@ -52,10 +58,15 @@
         animation: gold-progress 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
       }
 
-      /* Reset tailwind slate/indigo remnants to brand colors */
       .bg-slate-900 { background-color: var(--graphite) !important; }
       .bg-slate-950 { background-color: var(--deep-black) !important; }
       .border-slate-800 { border-color: #2a2a2a !important; }
+
+      @media (max-width: 640px) {
+        input, select, textarea {
+          font-size: 16px !important; /* Prevent iOS zoom */
+        }
+      }
     </style>
     <script type="importmap">
     {
@@ -72,7 +83,6 @@
   </head>
   <body>
     <div id="root"></div>
-    <!-- Ponto de entrada corrigido para evitar tela branca -->
     <script type="module" src="index.tsx"></script>
   </body>
 </html>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { TrendingUp, TrendingDown, DollarSign, PieChart, Users, AlertCircle, Activity, ArrowUpRight, PackageMinus } from 'lucide-react';
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ComposedChart, Line, Bar, Area, Legend, Cell } from 'recharts';
@@ -41,16 +42,16 @@ const Dashboard: React.FC<DashboardProps> = ({ company, transactions, menuItems,
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-[#1a1a1a]/90 backdrop-blur-xl border border-[#D4AF37]/20 p-4 rounded-2xl shadow-2xl">
+        <div className="bg-[#1a1a1a]/90 backdrop-blur-xl border border-[#D4AF37]/20 p-3 lg:p-4 rounded-2xl shadow-2xl">
           <p className="text-[#D4AF37] text-[10px] font-bold uppercase tracking-widest mb-3 border-b border-[#1a1a1a] pb-2">{label}</p>
           <div className="space-y-2">
             {payload.map((entry: any, index: number) => (
-              <div key={index} className="flex items-center justify-between gap-8">
+              <div key={index} className="flex items-center justify-between gap-4 lg:gap-8">
                 <div className="flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: entry.color }}></div>
-                  <span className="text-xs text-slate-400 font-medium">{entry.name}</span>
+                  <span className="text-[10px] lg:text-xs text-slate-400 font-medium">{entry.name}</span>
                 </div>
-                <span className="text-xs font-bold text-white">
+                <span className="text-[10px] lg:text-xs font-bold text-white whitespace-nowrap">
                   {entry.name.includes('%') ? `${entry.value.toFixed(1)}%` : `R$ ${entry.value.toLocaleString('pt-BR')}`}
                 </span>
               </div>
@@ -63,49 +64,51 @@ const Dashboard: React.FC<DashboardProps> = ({ company, transactions, menuItems,
   };
 
   return (
-    <div className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div className="space-y-4 lg:space-y-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { label: 'Faturamento Bruto', value: `R$ ${revenue.toLocaleString()}`, icon: DollarSign, color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10' },
           { label: 'Lucro Líquido Real', value: `R$ ${profit.toLocaleString()}`, icon: TrendingUp, color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10' },
           { label: 'Quebra / Perdas', value: `R$ ${totalLoss.toLocaleString()}`, icon: PackageMinus, color: 'text-rose-500', bg: 'bg-rose-500/10' },
           { label: 'Margem Líquida', value: `${margin.toFixed(1)}%`, icon: PieChart, color: 'text-[#D4AF37]', bg: 'bg-[#D4AF37]/10' },
         ].map((kpi, idx) => (
-          <div key={idx} className="bg-[#1a1a1a] border border-[#1a1a1a] hover:border-[#D4AF37]/30 p-5 rounded-2xl relative overflow-hidden group transition-all duration-500">
-            <div className="absolute right-[-10px] top-[-10px] opacity-[0.03] text-white group-hover:scale-110 transition-transform duration-700"><kpi.icon size={80} /></div>
+          <div key={idx} className="bg-[#1a1a1a] border border-[#1a1a1a] hover:border-[#D4AF37]/30 p-4 lg:p-5 rounded-2xl relative overflow-hidden group transition-all duration-500">
+            <div className="absolute right-[-10px] top-[-10px] opacity-[0.03] text-white group-hover:scale-110 transition-transform duration-700">
+              <kpi.icon size={80} />
+            </div>
             <div className="flex justify-between items-start mb-4">
               <div className={`p-2 rounded-lg ${kpi.bg}`}>
                 <kpi.icon size={20} className={kpi.color} />
               </div>
-              <div className="flex items-center gap-1 text-[10px] text-[#D4AF37] font-bold bg-[#D4AF37]/5 px-2 py-1 rounded-full border border-[#D4AF37]/10">
+              <div className="flex items-center gap-1 text-[9px] lg:text-[10px] text-[#D4AF37] font-bold bg-[#D4AF37]/5 px-2 py-1 rounded-full border border-[#D4AF37]/10 whitespace-nowrap">
                 <ArrowUpRight size={10} /> 12%
               </div>
             </div>
-            <p className="text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-1">{kpi.label}</p>
-            <h3 className={`text-2xl font-black ${kpi.color}`}>{kpi.value}</h3>
+            <p className="text-slate-500 text-[9px] lg:text-[10px] font-bold uppercase tracking-widest mb-1">{kpi.label}</p>
+            <h3 className={`text-xl lg:text-2xl font-black ${kpi.color}`}>{kpi.value}</h3>
           </div>
         ))}
       </div>
 
-      <div className="bg-[#1a1a1a] border border-[#1a1a1a] p-6 rounded-[2rem] shadow-sm relative overflow-hidden">
+      <div className="bg-[#1a1a1a] border border-[#1a1a1a] p-4 lg:p-6 rounded-[2rem] shadow-sm relative overflow-hidden">
         <div className="absolute top-0 right-0 w-64 h-64 bg-[#D4AF37]/5 blur-[100px] -mr-32 -mt-32"></div>
         
         <div className="flex flex-col md:flex-row justify-between md:items-center gap-4 mb-8 relative z-10">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-[#D4AF37]/10 rounded-2xl flex items-center justify-center text-[#D4AF37] shadow-inner border border-[#D4AF37]/20">
+            <div className="w-10 h-10 lg:w-12 lg:h-12 bg-[#D4AF37]/10 rounded-2xl flex items-center justify-center text-[#D4AF37] shadow-inner border border-[#D4AF37]/20">
               <Activity size={24} />
             </div>
             <div>
-              <h3 className="font-bold text-xl text-white">Fluxo de Performance Real</h3>
-              <p className="text-xs text-slate-500 font-medium tracking-wide">Analise custos de produtos vs faturamento • {rangeLabels[dashboardRange]}</p>
+              <h3 className="font-bold text-lg lg:text-xl text-white">Fluxo de Performance Real</h3>
+              <p className="text-[10px] lg:text-xs text-slate-500 font-medium tracking-wide">Analise custos de produtos vs faturamento</p>
             </div>
           </div>
           
-          <div className="flex items-center gap-2 bg-[#0b0b0b] p-1 rounded-xl border border-[#1a1a1a] shadow-lg">
+          <div className="flex items-center gap-2 bg-[#0b0b0b] p-1 rounded-xl border border-[#1a1a1a] shadow-lg w-full md:w-auto">
             <select 
               value={dashboardRange}
               onChange={(e) => setDashboardRange(e.target.value)}
-              className="bg-transparent border-none text-xs font-bold rounded-lg py-2 px-4 text-[#D4AF37] outline-none cursor-pointer"
+              className="bg-transparent border-none text-[10px] lg:text-xs font-bold rounded-lg py-2 px-3 lg:px-4 text-[#D4AF37] outline-none cursor-pointer w-full"
             >
               <option value="7d" className="bg-[#1a1a1a]">Uma semana</option>
               <option value="15d" className="bg-[#1a1a1a]">15 dias</option>
@@ -114,9 +117,9 @@ const Dashboard: React.FC<DashboardProps> = ({ company, transactions, menuItems,
           </div>
         </div>
 
-        <div className="h-[450px] w-full relative z-10">
+        <div className="h-[300px] lg:h-[450px] w-full relative z-10">
           <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={data} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+            <ComposedChart data={data} margin={{ top: 10, right: 0, left: -20, bottom: 0 }}>
               <defs>
                 <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="#D4AF37" stopOpacity={0.8}/>
@@ -128,16 +131,16 @@ const Dashboard: React.FC<DashboardProps> = ({ company, transactions, menuItems,
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="4 4" stroke="#1a1a1a" vertical={false} />
-              <XAxis dataKey="name" stroke="#475569" fontSize={11} tickLine={false} axisLine={false} dy={15} tick={{ fontWeight: 600 }} />
-              <YAxis yAxisId="left" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${v >= 1000 ? (v/1000).toFixed(1) + 'k' : v}`} />
-              <YAxis yAxisId="right" orientation="right" stroke="#D4AF37" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} />
+              <XAxis dataKey="name" stroke="#475569" fontSize={10} tickLine={false} axisLine={false} dy={10} tick={{ fontWeight: 600 }} />
+              <YAxis yAxisId="left" stroke="#475569" fontSize={9} tickLine={false} axisLine={false} tickFormatter={(v) => `R$${v >= 1000 ? (v/1000).toFixed(0) + 'k' : v}`} />
+              <YAxis yAxisId="right" orientation="right" hide={window.innerWidth < 640} stroke="#D4AF37" fontSize={9} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} />
               <Tooltip content={<CustomTooltip />} cursor={{ fill: '#D4AF3705' }} />
-              <Legend verticalAlign="top" align="right" height={40} iconType="circle" wrapperStyle={{ fontSize: '10px', fontWeight: 'bold', textTransform: 'uppercase', paddingBottom: '20px', color: '#D4AF37' }} />
+              <Legend verticalAlign="top" align="right" height={30} iconType="circle" wrapperStyle={{ fontSize: '9px', fontWeight: 'bold', textTransform: 'uppercase', paddingBottom: '10px', color: '#D4AF37' }} />
               
-              <Bar yAxisId="left" dataKey="faturamento" name="Faturamento" fill="url(#barGradient)" radius={[6, 6, 0, 0]} barSize={32} />
+              <Bar yAxisId="left" dataKey="faturamento" name="Faturamento" fill="url(#barGradient)" radius={[4, 4, 0, 0]} barSize={window.innerWidth < 640 ? 16 : 32} />
               <Area yAxisId="left" type="monotone" dataKey="lucro" name="Lucro Real" stroke="#ffffff" fill="url(#areaProfit)" strokeWidth={2} />
-              <Line yAxisId="left" type="monotone" dataKey="desperdicio" name="Custo Desperdício" stroke="#ef4444" strokeWidth={2} dot={{ r: 4, fill: '#ef4444' }} />
-              <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem %" stroke="#D4AF37" strokeWidth={3} dot={{ r: 4, fill: '#D4AF37' }} />
+              <Line yAxisId="left" type="monotone" dataKey="desperdicio" name="Custo Desperdício" stroke="#ef4444" strokeWidth={2} dot={{ r: 3, fill: '#ef4444' }} />
+              <Line yAxisId="right" type="monotone" dataKey="margem" name="Margem %" stroke="#D4AF37" strokeWidth={3} dot={{ r: 3, fill: '#D4AF37' }} />
             </ComposedChart>
           </ResponsiveContainer>
         </div>

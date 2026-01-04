@@ -23,33 +23,28 @@ import ManualShoppingListForm from './components/ManualShoppingListForm';
 import Suppliers from './components/Suppliers';
 import SupplierForm from './components/SupplierForm';
 import { COMPANIES, MOCK_MENU_ITEMS, MOCK_TRANSACTIONS, MOCK_PRODUCTS, MOCK_PRODUCT_OUTPUTS, MOCK_SUPPLIERS } from './constants';
-import { Sparkles, Bell } from 'lucide-react';
+import { Sparkles, Bell, Menu, X } from 'lucide-react';
 import { Transaction, MenuItem, Product, ProductOutput, Notification, Company, Supplier, ManualShoppingList, ManualShoppingItem } from './types';
 
-// Utility to load data from localStorage
 const loadFromStorage = <T,>(key: string, defaultValue: T): T => {
   try {
     const saved = localStorage.getItem(`girochef_${key}`);
     return saved ? JSON.parse(saved) : defaultValue;
   } catch (e) {
-    console.error(`Error loading ${key} from storage:`, e);
     return defaultValue;
   }
 };
 
-// Utility to save data to localStorage
 const saveToStorage = (key: string, value: any) => {
   try {
     localStorage.setItem(`girochef_${key}`, JSON.stringify(value));
-  } catch (e) {
-    console.error(`Error saving ${key} to storage:`, e);
-  }
+  } catch (e) {}
 };
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // Persistent States
   const [availableCompanies, setAvailableCompanies] = useState<Company[]>(() => 
     loadFromStorage('availableCompanies', COMPANIES)
   );
@@ -85,7 +80,6 @@ const App: React.FC = () => {
     loadFromStorage('manualShoppingLists', {})
   );
 
-  // Persistence Sync Effects
   useEffect(() => saveToStorage('availableCompanies', availableCompanies), [availableCompanies]);
   useEffect(() => saveToStorage('selectedCompany', selectedCompany), [selectedCompany]);
   useEffect(() => saveToStorage('transactions', transactions), [transactions]);
@@ -95,7 +89,6 @@ const App: React.FC = () => {
   useEffect(() => saveToStorage('suppliers', suppliers), [suppliers]);
   useEffect(() => saveToStorage('manualShoppingLists', manualShoppingLists), [manualShoppingLists]);
 
-  // UI States
   const [isAIModalOpen, setIsAIModalOpen] = useState(false);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [isSupportOpen, setIsSupportOpen] = useState(false);
@@ -148,30 +141,8 @@ const App: React.FC = () => {
         });
       }
     });
-
-    const recentWaste = currentOutputs.filter(o => o.reason === 'Desperdício').reduce((acc, o) => acc + o.estimatedCost, 0);
-    if (recentWaste > 100) {
-      newNotifications.push({
-        id: 'high-waste-alert',
-        type: 'error',
-        title: 'Desperdício Elevado',
-        message: `Detectamos R$ ${recentWaste.toLocaleString('pt-BR')} em quebras recentes. Analise os processos de produção.`,
-        timestamp: new Date().toISOString(),
-        read: false
-      });
-    }
-
-    newNotifications.push({
-      id: 'welcome-msg',
-      type: 'info',
-      title: 'GIROCHEF Ativo',
-      message: `Monitorando ${selectedCompany.name} em tempo real. Novos insights de CMV disponíveis.`,
-      timestamp: new Date().toISOString(),
-      read: true
-    });
-
     setNotifications(newNotifications);
-  }, [selectedCompany.id, products, productOutputs]);
+  }, [selectedCompany.id, products]);
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -234,19 +205,20 @@ const App: React.FC = () => {
   };
 
   const handleSaveProduct = (productData: Omit<Product, 'id'>) => {
-    const newProduct: Product = { ...productData, id: Math.random().toString(36).substr(2, 9) };
-    if (editingProduct) {
+    if (editingProduct && editingProduct.id !== 'template') {
       setProducts(prev => ({
         ...prev,
         [selectedCompany.id]: (prev[selectedCompany.id] || []).map(p => p.id === editingProduct.id ? { ...productData, id: p.id } : p)
       }));
       setEditingProduct(null);
     } else {
+      const newProduct: Product = { ...productData, id: Math.random().toString(36).substr(2, 9) };
       setProducts(prev => ({
         ...prev,
         [selectedCompany.id]: [...(prev[selectedCompany.id] || []), newProduct]
       }));
       setIsAddingProduct(false);
+      setEditingProduct(null);
     }
   };
 
@@ -258,18 +230,12 @@ const App: React.FC = () => {
           if (p.id === editingOutput.productId) {
             return { ...p, quantity: p.quantity + editingOutput.quantity - outputData.quantity };
           }
-          if (p.id === outputData.productId && p.id !== editingOutput.productId) {
-             return { ...p, quantity: p.quantity - outputData.quantity };
-          }
           return p;
         })
       }));
-
       setProductOutputs(prev => ({
         ...prev,
-        [selectedCompany.id]: (prev[selectedCompany.id] || []).map(o => 
-          o.id === editingOutput.id ? { ...outputData, id: o.id } : o
-        )
+        [selectedCompany.id]: (prev[selectedCompany.id] || []).map(o => o.id === editingOutput.id ? { ...outputData, id: o.id } : o)
       }));
       setEditingOutput(null);
     } else {
@@ -278,12 +244,9 @@ const App: React.FC = () => {
         ...prev,
         [selectedCompany.id]: [newOutput, ...(prev[selectedCompany.id] || [])]
       }));
-
       setProducts(prev => ({
         ...prev,
-        [selectedCompany.id]: (prev[selectedCompany.id] || []).map(p => 
-          p.id === outputData.productId ? { ...p, quantity: Math.max(0, p.quantity - outputData.quantity) } : p
-        )
+        [selectedCompany.id]: (prev[selectedCompany.id] || []).map(p => p.id === outputData.productId ? { ...p, quantity: Math.max(0, p.quantity - outputData.quantity) } : p)
       }));
       setIsAddingOutput(false);
     }
@@ -293,9 +256,7 @@ const App: React.FC = () => {
     if (editingSupplier) {
       setSuppliers(prev => ({
         ...prev,
-        [selectedCompany.id]: (prev[selectedCompany.id] || []).map(s => 
-          s.id === editingSupplier.id ? { ...supplierData, id: s.id } : s
-        )
+        [selectedCompany.id]: (prev[selectedCompany.id] || []).map(s => s.id === editingSupplier.id ? { ...supplierData, id: s.id } : s)
       }));
       setEditingSupplier(null);
     } else {
@@ -310,13 +271,10 @@ const App: React.FC = () => {
 
   const handleSaveManualShoppingList = (items: ManualShoppingItem[], name: string) => {
     const totalCost = items.reduce((acc, item) => acc + (item.quantity * item.estimatedCost), 0);
-    
     if (editingManualList) {
       setManualShoppingLists(prev => ({
         ...prev,
-        [selectedCompany.id]: (prev[selectedCompany.id] || []).map(l => 
-          l.id === editingManualList.id ? { ...l, name, items, totalCost } : l
-        )
+        [selectedCompany.id]: (prev[selectedCompany.id] || []).map(l => l.id === editingManualList.id ? { ...l, name, items, totalCost } : l)
       }));
       setEditingManualList(null);
     } else {
@@ -327,22 +285,17 @@ const App: React.FC = () => {
         totalCost,
         items: items
       };
-
-      setManualShoppingLists(prev => ({
-        ...prev,
-        [selectedCompany.id]: [newList, ...(prev[selectedCompany.id] || [])]
-      }));
+      setManualShoppingLists(prev => ({ ...prev, [selectedCompany.id]: [newList, ...(prev[selectedCompany.id] || [])] }));
       setIsAddingManualShoppingList(false);
     }
   };
 
   const handleLaunchItemFromShoppingList = (item: ManualShoppingItem) => {
-    // Switch to product entry tab and pre-fill data
     setIsAddingManualShoppingList(false);
     setEditingManualList(null);
     setActiveTab('products');
     setEditingProduct({
-      id: 'template', // Temporary ID to trigger the form
+      id: 'template',
       name: item.name,
       supplier: item.supplier,
       cost: item.estimatedCost,
@@ -362,10 +315,7 @@ const App: React.FC = () => {
 
   const handleAddNewCompany = (companyData: Omit<Company, 'id'>) => {
     const newId = Math.random().toString(36).substr(2, 9);
-    const newCompany: Company = {
-      ...companyData,
-      id: newId
-    };
+    const newCompany: Company = { ...companyData, id: newId };
     setAvailableCompanies(prev => [...prev, newCompany]);
     setSelectedCompany(newCompany);
     setActiveTab('dashboard');
@@ -388,9 +338,7 @@ const App: React.FC = () => {
       if (outputToRemove) {
         setProducts(prev => ({
           ...prev,
-          [selectedCompany.id]: (prev[selectedCompany.id] || []).map(p => 
-            p.id === outputToRemove.productId ? { ...p, quantity: p.quantity + outputToRemove.quantity } : p
-          )
+          [selectedCompany.id]: (prev[selectedCompany.id] || []).map(p => p.id === outputToRemove.productId ? { ...p, quantity: p.quantity + outputToRemove.quantity } : p)
         }));
       }
       setProductOutputs(prev => ({ ...prev, [selectedCompany.id]: prev[selectedCompany.id].filter(o => o.id !== id) }));
@@ -400,8 +348,6 @@ const App: React.FC = () => {
         setAvailableCompanies(remaining);
         setSelectedCompany(remaining[0]);
         setActiveTab('dashboard');
-      } else {
-        alert("Você deve manter pelo menos uma empresa cadastrada.");
       }
     } else if (type === 'supplier') {
        setSuppliers(prev => ({ ...prev, [selectedCompany.id]: prev[selectedCompany.id].filter(s => s.id !== id) }));
@@ -413,10 +359,6 @@ const App: React.FC = () => {
 
   const handleMarkNotificationAsRead = (id: string) => {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
-  };
-
-  const handleMarkAllNotificationsAsRead = () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
   };
 
   const unreadCount = notifications.filter(n => !n.read).length;
@@ -473,39 +415,47 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex">
-      <Sidebar activeTab={activeTab} setActiveTab={(t) => { 
-        setActiveTab(t); 
-        setIsAddingTransaction(false); setEditingTransaction(null); 
-        setIsAddingProduct(false); setEditingProduct(null); 
-        setIsAddingOutput(false); setEditingOutput(null);
-        setIsAddingMenuItem(false); setEditingMenuItem(null);
-        setIsAddingSupplier(false); setEditingSupplier(null);
-        setIsAddingManualShoppingList(false); setEditingManualList(null);
-      }} onSupportClick={() => setIsSupportOpen(true)} />
-      <main className="flex-1 ml-64 min-h-screen flex flex-col transition-all duration-300">
-        <header className="sticky top-0 h-20 border-b border-[#1a1a1a] bg-black/80 backdrop-blur-md z-30 px-8 flex items-center justify-between no-print">
-          <div className="flex items-center gap-4">
-            <h2 className="text-xl font-bold capitalize text-[#D4AF37]">{activeTab.replace(/-/g, ' ')}</h2>
-            <div className="h-6 w-px bg-[#1a1a1a] mx-2 hidden sm:block"></div>
-            <p className="text-slate-500 text-sm hidden sm:block">{new Date().toLocaleDateString('pt-BR', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+    <div className="min-h-screen bg-black text-white flex flex-col lg:flex-row overflow-x-hidden">
+      <Sidebar 
+        activeTab={activeTab} 
+        setActiveTab={setActiveTab} 
+        onSupportClick={() => setIsSupportOpen(true)}
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+      />
+      
+      <main className="flex-1 lg:ml-64 min-h-screen flex flex-col transition-all duration-300 w-full relative">
+        <header className="sticky top-0 h-20 border-b border-[#1a1a1a] bg-black/80 backdrop-blur-md z-30 px-4 lg:px-8 flex items-center justify-between no-print gap-3">
+          <div className="flex items-center gap-3 lg:gap-4 overflow-hidden">
+            <button 
+              onClick={() => setIsSidebarOpen(true)}
+              className="lg:hidden p-2 text-[#D4AF37] hover:bg-[#1a1a1a] rounded-xl"
+            >
+              <Menu size={24} />
+            </button>
+            <div className="hidden sm:block">
+              <h2 className="text-sm lg:text-xl font-bold capitalize text-[#D4AF37] truncate">{activeTab.replace(/-/g, ' ')}</h2>
+              <p className="text-slate-500 text-[10px] lg:text-sm truncate">{new Date().toLocaleDateString('pt-BR')}</p>
+            </div>
           </div>
-          <div className="flex items-center gap-4">
+
+          <div className="flex items-center gap-2 lg:gap-4 shrink-0">
             <button 
               onClick={() => setIsAIModalOpen(true)} 
-              className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] px-5 py-2.5 rounded-xl text-sm font-bold flex items-center gap-2 hover:bg-[#D4AF37] hover:text-black transition-all gold-glow group"
+              className="bg-[#D4AF37]/10 border border-[#D4AF37]/30 text-[#D4AF37] p-2 lg:px-5 lg:py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 hover:bg-[#D4AF37] hover:text-black transition-all gold-glow group"
             >
-              <Sparkles size={16} className="group-hover:animate-pulse" /> GIROCHEF AI
+              <Sparkles size={16} />
+              <span className="hidden sm:inline">GIROCHEF AI</span>
             </button>
             
-            <div className="relative" ref={notificationsRef}>
+            <div className="relative shrink-0" ref={notificationsRef}>
               <button 
                 onClick={() => setIsNotificationsOpen(!isNotificationsOpen)}
-                className={`p-2.5 bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl text-white relative hover:border-[#D4AF37]/50 transition-colors ${unreadCount > 0 ? 'ring-2 ring-[#D4AF37]/20' : ''}`}
+                className={`p-2 lg:p-2.5 bg-[#1a1a1a] border border-[#1a1a1a] rounded-xl text-white relative hover:border-[#D4AF37]/50 transition-colors ${unreadCount > 0 ? 'ring-2 ring-[#D4AF37]/20' : ''}`}
               >
                 <Bell size={20} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 w-4 h-4 bg-[#D4AF37] rounded-full border-2 border-black text-[8px] flex items-center justify-center font-black text-black">
+                  <span className="absolute top-1.5 lg:top-2 right-1.5 lg:right-2 w-4 h-4 bg-[#D4AF37] rounded-full border-2 border-black text-[8px] flex items-center justify-center font-black text-black">
                     {unreadCount}
                   </span>
                 )}
@@ -515,22 +465,31 @@ const App: React.FC = () => {
                   notifications={notifications} 
                   onClose={() => setIsNotificationsOpen(false)}
                   onMarkAsRead={handleMarkNotificationAsRead}
-                  onMarkAllAsRead={handleMarkAllNotificationsAsRead}
+                  onMarkAllAsRead={() => setNotifications(prev => prev.map(n => ({ ...n, read: true })))}
                 />
               )}
             </div>
 
-            <CompanySelector 
-              companies={availableCompanies} 
-              selected={selectedCompany} 
-              onSelect={setSelectedCompany} 
-              onAddClick={() => setIsAddingCompanyModalOpen(true)}
-            />
+            <div className="hidden xs:block shrink-0">
+              <CompanySelector 
+                companies={availableCompanies} 
+                selected={selectedCompany} 
+                onSelect={setSelectedCompany} 
+                onAddClick={() => setIsAddingCompanyModalOpen(true)}
+              />
+            </div>
           </div>
         </header>
-        <div className="p-8 max-w-7xl mx-auto w-full flex-1">{renderContent()}</div>
-        <footer className="p-8 border-t border-[#1a1a1a] text-slate-600 text-xs text-center no-print">© 2024 GIROCHEF SaaS - Inteligência Financeira para Delivery.</footer>
+
+        <div className="p-4 lg:p-8 max-w-7xl mx-auto w-full flex-1">
+          {renderContent()}
+        </div>
+
+        <footer className="p-4 lg:p-8 border-t border-[#1a1a1a] text-slate-600 text-[10px] text-center no-print">
+          © 2024 GIROCHEF SaaS - Inteligência Financeira para Delivery.
+        </footer>
       </main>
+
       <AIConsultant isOpen={isAIModalOpen} onClose={() => setIsAIModalOpen(false)} contextData={contextData} />
       <SupportModal isOpen={isSupportOpen} onClose={() => setIsSupportOpen(false)} />
       <AddCompanyModal 
@@ -538,7 +497,14 @@ const App: React.FC = () => {
         onClose={() => setIsAddingCompanyModalOpen(false)} 
         onSave={handleAddNewCompany} 
       />
-      <ConfirmationModal isOpen={confirmModal.isOpen} title={confirmModal.title} message={confirmModal.message} confirmLabel="Confirmar" onConfirm={handleConfirmDelete} onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} />
+      <ConfirmationModal 
+        isOpen={confirmModal.isOpen} 
+        title={confirmModal.title} 
+        message={confirmModal.message} 
+        confirmLabel="Confirmar" 
+        onConfirm={handleConfirmDelete} 
+        onCancel={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))} 
+      />
     </div>
   );
 };
